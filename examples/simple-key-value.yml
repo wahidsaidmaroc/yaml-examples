@@ -1,0 +1,43 @@
+# simple-key-value.yml — The most basic YAML structure: key-value pairs
+
+# A YAML file is a series of key: value pairs
+# Keys are strings, values can be strings, numbers, booleans, or null
+
+# --- Strings ---
+name: Said WAHID
+job_title: DevOps Engineer
+city: Maroc
+
+# Strings with special characters must be quoted
+greeting: "Hello, World!"
+path: "C:\\Users\\said\\projects"
+
+# Multi-line string (literal block — preserves newlines)
+description: |
+  This is a multi-line
+  string value in YAML.
+  Each line is preserved.
+
+# Multi-line string (folded block — newlines become spaces)
+summary: >
+  This long text will be
+  folded into a single
+  paragraph when parsed.
+
+# --- Numbers ---
+age: 30
+port: 8080
+pi: 3.14159
+balance: -150.50
+
+# --- Booleans ---
+is_active: true
+is_admin: false
+
+# --- Null value ---
+middle_name: null
+nickname: ~         # ~ is also null in YAML
+
+# --- Dates ---
+created_at: 2026-03-11
+updated_at: 2026-03-11T14:30:00Z

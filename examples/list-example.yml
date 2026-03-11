@@ -1,0 +1,49 @@
+# list-example.yml — YAML lists (sequences) in different styles
+
+# --- Block style (one item per line, with dash) ---
+fruits:
+  - apple
+  - banana
+  - cherry
+
+# --- Inline / flow style (compact, like a JSON array) ---
+colors: [red, green, blue]
+
+# --- List of numbers ---
+ports:
+  - 80
+  - 443
+  - 8080
+  - 8443
+
+# --- List of booleans ---
+feature_flags:
+  - true
+  - false
+  - true
+
+# --- List of objects (most common in DevOps configs) ---
+servers:
+  - name: web01
+    ip: 10.0.1.10
+    role: web
+  - name: app01
+    ip: 10.0.2.10
+    role: application
+  - name: db01
+    ip: 10.0.3.10
+    role: database
+
+# --- Nested list (list inside a list) ---
+matrix:
+  - [1, 2, 3]
+  - [4, 5, 6]
+  - [7, 8, 9]
+
+# --- Mixed types in a list (valid YAML, but avoid in practice) ---
+mixed:
+  - hello
+  - 42
+  - true
+  - null
+  - key: value

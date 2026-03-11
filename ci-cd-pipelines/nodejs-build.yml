@@ -1,0 +1,54 @@
+# azure-pipelines.yml — Build & Test a Node.js application
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - README.md
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  nodeVersion: "20.x"
+
+stages:
+  - stage: CI
+    displayName: Continuous Integration
+    jobs:
+      - job: BuildAndTest
+        displayName: Install, Lint, Test & Build
+        steps:
+          - task: NodeTool@0
+            displayName: Use Node.js $(nodeVersion)
+            inputs:
+              versionSpec: $(nodeVersion)
+
+          - script: npm ci
+            displayName: Install Dependencies (clean install)
+
+          - script: npm run lint
+            displayName: Run ESLint
+            continueOnError: true
+
+          - script: npm test -- --ci --coverage
+            displayName: Run Tests with Coverage
+
+          - script: npm run build
+            displayName: Build Production Bundle
+
+          - task: PublishTestResults@2
+            displayName: Publish Test Results
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: "**/junit.xml"
+            condition: succeededOrFailed()
+
+          - task: PublishCodeCoverageResults@1
+            displayName: Publish Code Coverage
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: "**/coverage/cobertura-coverage.xml"

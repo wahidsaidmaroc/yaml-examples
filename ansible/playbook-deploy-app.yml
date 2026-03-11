@@ -1,0 +1,83 @@
+# playbook-deploy-app.yml — Deploy a containerized application using Docker
+
+---
+- name: Deploy Application
+  hosts: appservers
+  become: true
+  gather_facts: true
+
+  vars:
+    app_name: myapp
+    app_image: "{{ lookup('env', 'ACR_LOGIN_SERVER') }}/myapp"
+    app_tag: "{{ image_tag | default('latest') }}"
+    app_port: 8080
+    deploy_dir: /opt/{{ app_name }}
+    app_env: production
+
+  pre_tasks:
+    - name: Ensure Docker is installed
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    - name: Ensure Docker service is running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+  tasks:
+    - name: Create deployment directory
+      ansible.builtin.file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: "0750"
+
+    - name: Copy environment file
+      ansible.builtin.template:
+        src: templates/app.env.j2
+        dest: "{{ deploy_dir }}/.env"
+        mode: "0600"  # Restrict access — contains secrets
+
+    - name: Copy docker-compose file
+      ansible.builtin.copy:
+        src: files/docker-compose.yml
+        dest: "{{ deploy_dir }}/docker-compose.yml"
+        mode: "0644"
+
+    - name: Log in to container registry
+      community.docker.docker_login:
+        registry_url: "{{ lookup('env', 'ACR_LOGIN_SERVER') }}"
+        username: "{{ lookup('env', 'ACR_USERNAME') }}"
+        password: "{{ lookup('env', 'ACR_PASSWORD') }}"
+
+    - name: Pull latest image
+      community.docker.docker_image:
+        name: "{{ app_image }}:{{ app_tag }}"
+        source: pull
+        force_source: true
+
+    - name: Deploy with Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ deploy_dir }}"
+        state: present
+        pull: always
+
+    - name: Verify application is healthy
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      retries: 5
+      delay: 10
+      register: health_check
+      until: health_check.status == 200
+
+  post_tasks:
+    - name: Clean up unused Docker images
+      community.docker.docker_prune:
+        images: true
+        images_filters:
+          dangling: true

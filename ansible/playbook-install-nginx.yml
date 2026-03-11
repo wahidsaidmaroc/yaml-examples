@@ -1,0 +1,75 @@
+# playbook-install-nginx.yml — Install and configure Nginx on Ubuntu/Debian servers
+
+---
+- name: Install and Configure Nginx
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    nginx_port: 80
+    nginx_server_name: "example.com"
+    nginx_root: /var/www/html
+    nginx_user: www-data
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+
+    - name: Ensure Nginx is started and enabled
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Create web root directory
+      ansible.builtin.file:
+        path: "{{ nginx_root }}"
+        state: directory
+        owner: "{{ nginx_user }}"
+        group: "{{ nginx_user }}"
+        mode: "0755"
+
+    - name: Deploy Nginx virtual host configuration
+      ansible.builtin.template:
+        src: templates/nginx-vhost.conf.j2
+        dest: /etc/nginx/sites-available/{{ nginx_server_name }}
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Enable virtual host
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/{{ nginx_server_name }}
+        dest: /etc/nginx/sites-enabled/{{ nginx_server_name }}
+        state: link
+      notify: Reload nginx
+
+    - name: Remove default Nginx vhost
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
+    - name: Verify Nginx configuration
+      ansible.builtin.command: nginx -t
+      changed_when: false

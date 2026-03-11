@@ -1,0 +1,77 @@
+# comments-example.yml — YAML comments, anchors, aliases, and best practices
+
+# In YAML, comments start with the # character.
+# They can appear on their own line or at the end of a value line.
+# YAML has NO multi-line comment syntax — each line needs its own #.
+
+# ============================================================
+# SECTION 1 — Inline comments
+# ============================================================
+
+server:
+  host: localhost       # Do not use in production
+  port: 8080            # Default HTTP port
+  debug: false          # Set to true only during development
+  timeout: 30           # In seconds
+
+# ============================================================
+# SECTION 2 — Anchors (&) and Aliases (*) — DRY principle
+# ============================================================
+
+# Define a reusable block with an anchor (&)
+default_resources: &default_resources
+  requests:
+    memory: 128Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 500m
+
+services:
+  api:
+    image: myapp-api:latest
+    resources: *default_resources    # Reuse the anchor here
+
+  worker:
+    image: myapp-worker:latest
+    resources: *default_resources    # Same resources, no duplication
+
+# ============================================================
+# SECTION 3 — Merging with <<
+# ============================================================
+
+base_config: &base
+  log_level: info
+  retry_count: 3
+  timeout: 30
+
+production_config:
+  <<: *base              # Merge all keys from base_config
+  log_level: warning     # Override a single key
+  region: eu-west-1      # Add new key
+
+staging_config:
+  <<: *base
+  log_level: debug
+  region: eu-west-2
+
+# ============================================================
+# SECTION 4 — Tips to avoid common YAML mistakes
+# ============================================================
+
+# BAD: Unquoted string that looks like a boolean
+# status: yes    ← parsed as boolean true, not the string "yes"
+
+# GOOD: Quote it explicitly
+status: "yes"
+
+# BAD: Unquoted version number
+# version: 1.10  ← may be parsed as float 1.1
+
+# GOOD: Quote version strings
+version: "1.10.0"
+
+# BAD: Tab indentation (YAML does NOT allow tabs)
+# Use spaces only — 2 spaces is the convention.
+
+# GOOD: Consistent 2-space indentation (as shown in this file)

@@ -1,0 +1,56 @@
+# nested-objects.yml — YAML nested objects (mappings inside mappings)
+
+# --- Simple nesting ---
+person:
+  name: Said WAHID
+  age: 30
+  address:
+    street: 12 Rue des Orangers
+    city: Casablanca
+    country: Morocco
+    postal_code: "20000"
+  contact:
+    email: said@example.com
+    phone: "+212-600-000000"
+
+# --- Deeply nested example (Kubernetes-style) ---
+deployment:
+  metadata:
+    name: myapp
+    namespace: production
+    labels:
+      app: myapp
+      tier: backend
+  spec:
+    replicas: 3
+    template:
+      spec:
+        containers:
+          - name: api
+            image: myapp:1.0.0
+            resources:
+              requests:
+                memory: 128Mi
+                cpu: 100m
+              limits:
+                memory: 512Mi
+                cpu: 500m
+
+# --- Object with a list of objects ---
+database:
+  host: db.example.com
+  port: 5432
+  credentials:
+    username: admin
+    password: "{{ vault_db_password }}"
+  replicas:
+    - host: db-replica-1.example.com
+      port: 5432
+      read_only: true
+    - host: db-replica-2.example.com
+      port: 5432
+      read_only: true
+
+# --- Inline / flow style objects ---
+point: {x: 10, y: 20}
+config: {debug: false, log_level: info, timeout: 30}

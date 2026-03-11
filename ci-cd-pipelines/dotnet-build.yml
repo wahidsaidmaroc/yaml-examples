@@ -1,0 +1,43 @@
+# azure-pipelines.yml — Build & Test a .NET application
+# Triggers on every push to main branch
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: Release
+  dotnetVersion: "8.x"
+
+stages:
+  - stage: Build
+    displayName: Build Stage
+    jobs:
+      - job: BuildJob
+        displayName: Restore, Build & Publish
+        steps:
+          - task: UseDotNet@2
+            displayName: Install .NET SDK
+            inputs:
+              packageType: sdk
+              version: $(dotnetVersion)
+
+          - script: dotnet restore
+            displayName: Restore NuGet Packages
+
+          - script: dotnet build --configuration $(buildConfiguration) --no-restore
+            displayName: Build Solution
+
+          - script: dotnet test --no-build --verbosity normal
+            displayName: Run Unit Tests
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Artifacts
+            inputs:
+              PathtoPublish: $(Build.ArtifactStagingDirectory)
+              ArtifactName: drop

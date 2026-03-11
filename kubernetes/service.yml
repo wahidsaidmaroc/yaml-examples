@@ -1,0 +1,42 @@
+# service.yml — Kubernetes Service exposing the application
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+  namespace: production
+  labels:
+    app: myapp
+  annotations:
+    # Azure Load Balancer — internal only
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: myapp
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 8443
+  sessionAffinity: None
+
+---
+# ClusterIP Service for internal pod communication
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-internal
+  namespace: production
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

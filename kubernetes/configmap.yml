@@ -1,0 +1,42 @@
+# configmap.yml — Kubernetes ConfigMap for application configuration
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp-config
+  namespace: production
+  labels:
+    app: myapp
+data:
+  # Application settings
+  APP_NAME: "MyApp"
+  APP_ENV: "production"
+  APP_PORT: "8080"
+  LOG_LEVEL: "info"
+
+  # Feature flags
+  FEATURE_NEW_DASHBOARD: "true"
+  FEATURE_BETA_API: "false"
+
+  # External service URLs (non-sensitive)
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  CORS_ORIGINS: "https://myapp.com,https://www.myapp.com"
+
+  # Mounted as a file — full nginx config
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name _;
+
+        location / {
+            proxy_pass http://localhost:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        location /health {
+            return 200 'OK';
+            add_header Content-Type text/plain;
+        }
+    }
